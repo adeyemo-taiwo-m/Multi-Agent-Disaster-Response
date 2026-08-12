@@ -8,9 +8,11 @@ import { AgentMarker } from "./AgentMarker";
 interface GridProps {
   grid: GridType;
   agents: AgentState[];
+  children?: React.ReactNode;
+  highlightedCell?: { x: number; y: number; severity?: string } | null;
 }
 
-export const Grid: React.FC<GridProps> = ({ grid, agents }) => {
+export const Grid: React.FC<GridProps> = ({ grid, agents, children, highlightedCell }) => {
   const gridSize = grid.length;
 
   return (
@@ -30,8 +32,30 @@ export const Grid: React.FC<GridProps> = ({ grid, agents }) => {
         )}
       </div>
 
-      {/* Overlay Agent Markers */}
+      {/* Overlay area for event spotlights and agent markers */}
       <div className="absolute inset-2 pointer-events-none">
+        {/* Render custom overlays such as EventSpotlight */}
+        {children}
+
+        {highlightedCell && (
+          <div
+            className={`absolute rounded-full pointer-events-none z-20 animate-pulse ring-4 ${
+              highlightedCell.severity === "warning"
+                ? "ring-[#F97316]/60"
+                : highlightedCell.severity === "success"
+                ? "ring-[#22C55E]/60"
+                : "ring-[#22D3EE]/60"
+            }`}
+            style={{
+              left: `${(highlightedCell.x / gridSize) * 100}%`,
+              top: `${(highlightedCell.y / gridSize) * 100}%`,
+              width: `${(1 / gridSize) * 100}%`,
+              height: `${(1 / gridSize) * 100}%`,
+              transform: "translate(-0%, -0%)",
+            }}
+          />
+        )}
+
         {agents.map((agent) => (
           <AgentMarker key={agent.id} agent={agent} gridSize={gridSize} />
         ))}

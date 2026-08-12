@@ -1,8 +1,10 @@
 "use client";
 
-import React from "react";
+import React, { useEffect, useState } from "react";
 import { useSimulation } from "../hooks/useSimulation";
 import { Grid } from "../components/Grid";
+import EventSpotlight from "../components/EventSpotlight";
+import { SpotlightEvent } from "../lib/types";
 import { Controls } from "../components/Controls";
 import { StatsPanel } from "../components/StatsPanel";
 import { ConfigPanel } from "../components/ConfigPanel";
@@ -25,6 +27,7 @@ export default function Home() {
     setSpeed,
     updateConfig,
     messages,
+    spotlightEvents,
   } = useSimulation({
     gridSize: 15,
     scoutCount: 2,
@@ -34,6 +37,39 @@ export default function Home() {
     dangerPercent: 8,
     maxTicks: 300,
   });
+
+  const [displayedSpotlights, setDisplayedSpotlights] = useState<SpotlightEvent[]>([]);
+  const [highlightedCell, setHighlightedCell] = useState<{ x: number; y: number; severity?: string } | null>(null);
+  const timersRef = React.useRef<number[]>([]);
+
+  useEffect(() => {
+    if (!spotlightEvents || spotlightEvents.length === 0) return;
+    const existingIds = new Set(displayedSpotlights.map((s) => s.id));
+    const newEvents = spotlightEvents.filter((s) => !existingIds.has(s.id));
+    newEvents.forEach((e) => {
+      setDisplayedSpotlights((prev) => [...prev, e]);
+      const t = window.setTimeout(() => {
+        setDisplayedSpotlights((prev) => prev.filter((p) => p.id !== e.id));
+      }, e.durationMs);
+      timersRef.current.push(t);
+
+      if (e.x !== undefined && e.y !== undefined) {
+        setHighlightedCell({ x: e.x, y: e.y, severity: e.severity });
+        const t2 = window.setTimeout(() => setHighlightedCell(null), e.durationMs);
+        timersRef.current.push(t2);
+      }
+    });
+
+    return () => {
+      timersRef.current.forEach((id) => clearTimeout(id));
+      timersRef.current = [];
+    };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [spotlightEvents]);
+
+  const handleDismiss = (id: string) => {
+    setDisplayedSpotlights((prev) => prev.filter((p) => p.id !== id));
+  };
 
   return (
     <main className="min-h-screen bg-[#0B1220] text-[#F8FAFC] p-4 md:p-6 font-sans">
@@ -75,7 +111,9 @@ export default function Home() {
             </div>
 
             {/* Grid Container */}
-            <Grid grid={grid} agents={agents} />
+            <Grid grid={grid} agents={agents} highlightedCell={highlightedCell}>
+              <EventSpotlight events={displayedSpotlights} onDismiss={handleDismiss} />
+            </Grid>
 
             {/* Legend Toolbar */}
             <div className="pt-2 grid grid-cols-2 sm:grid-cols-4 gap-2 text-[11px] font-mono-telemetry border-t border-[#22D3EE]/10">
