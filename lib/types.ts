@@ -43,6 +43,20 @@ export interface AgentMessage {
   timestamp: number;
 }
 
+export type SpotlightSeverity = "info" | "success" | "warning";
+
+export interface SpotlightEvent {
+  id: string;
+  tick: number;
+  title: string;
+  detail: string;
+  severity: SpotlightSeverity;
+  x?: number;
+  y?: number;
+  agentIds?: string[];
+  durationMs: number;
+}
+
 export interface SimulationStats {
   tick: number;
   victimsTotal: number;
