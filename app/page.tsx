@@ -6,6 +6,7 @@ import { Grid } from "../components/Grid";
 import EventSpotlight from "../components/EventSpotlight";
 import { SpotlightEvent } from "../lib/types";
 import { Controls } from "../components/Controls";
+import { DEMO_SCENARIO } from "../lib/demoScenarios";
 import { StatsPanel } from "../components/StatsPanel";
 import { ConfigPanel } from "../components/ConfigPanel";
 import { RunHistory } from "../components/RunHistory";
@@ -161,6 +162,11 @@ export default function Home() {
             onStepOnce={stepOnce}
             speed={speed}
             onSpeedChange={setSpeed}
+            onRunDemo={() => {
+              updateConfig(DEMO_SCENARIO);
+              // ensure simulation starts with demo config
+              start();
+            }}
             isComplete={stats.endedAt !== undefined}
           />
 

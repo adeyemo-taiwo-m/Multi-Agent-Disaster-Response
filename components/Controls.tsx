@@ -11,6 +11,7 @@ interface ControlsProps {
   onStepOnce: () => void;
   speed: number;
   onSpeedChange: (speed: number) => void;
+  onRunDemo?: () => void;
   isComplete: boolean;
 }
 
@@ -74,6 +75,16 @@ export const Controls: React.FC<ControlsProps> = ({
         >
           <RotateCcw className="w-3.5 h-3.5" />
           RESET
+        </button>
+      </div>
+
+      <div className="mt-2 flex gap-2">
+        <button
+          onClick={onRunDemo}
+          disabled={isRunning}
+          className="bg-transparent border border-[#22D3EE]/30 text-[#22D3EE] hover:bg-[#22D3EE]/6 font-mono-telemetry text-xs py-2 px-3 rounded flex items-center justify-center gap-1 transition-colors cursor-pointer disabled:opacity-40"
+        >
+          DEMO SCENARIO
         </button>
       </div>
 
