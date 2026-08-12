@@ -1,9 +1,16 @@
 "use client";
 
 import { useCallback, useEffect, useRef, useState } from "react";
-import { AgentState, Grid, SimulationConfig, SimulationStats } from "../lib/types";
+import {
+  AgentState,
+  Grid,
+  SimulationConfig,
+  SimulationStats,
+  SpotlightEvent,
+} from "../lib/types";
 import { SimulationEngine } from "../lib/simulationEngine";
 import { saveRun } from "../lib/stats";
+import { detectSpotlightEvents, resetSpotlightCursor } from "../lib/spotlightEngine";
 
 export function useSimulation(initialConfig: SimulationConfig) {
   const [config, setConfig] = useState<SimulationConfig>(initialConfig);
@@ -22,7 +29,10 @@ export function useSimulation(initialConfig: SimulationConfig) {
     message?: string;
   }>({ state: "idle" });
 
+  const [spotlightEvents, setSpotlightEvents] = useState<SpotlightEvent[]>([]);
+
   const hasSavedRef = useRef<boolean>(false);
+  const hasMissionEventRef = useRef<boolean>(false);
 
   const updateState = useCallback(() => {
     const engine = engineRef.current;
@@ -41,6 +51,19 @@ export function useSimulation(initialConfig: SimulationConfig) {
     engine.tick();
     updateState();
 
+    // Detect spotlight events from message bus after each tick
+    try {
+      const newEvents = detectSpotlightEvents(engineRef.current.bus.getAll(), engineRef.current.tick);
+      if (newEvents.length > 0) {
+        setSpotlightEvents((prev) => [...prev, ...newEvents]);
+      }
+    } catch (e) {
+      // detection should be pure and safe; swallow any unexpected errors
+      // so server-side rendering / build isn't affected
+      // eslint-disable-next-line no-console
+      console.error("Spotlight detection error:", e);
+    }
+
     // Check completion and auto-save
     if (engine.isComplete() && !hasSavedRef.current) {
       hasSavedRef.current = true;
@@ -57,6 +80,20 @@ export function useSimulation(initialConfig: SimulationConfig) {
           });
         }
       });
+    }
+
+    // Add a one-time mission-complete spotlight event when engine finishes
+    if (engine.isComplete() && !hasMissionEventRef.current) {
+      hasMissionEventRef.current = true;
+      const completeEvent: SpotlightEvent = {
+        id: `mission-complete-${engine.stats.tick}`,
+        tick: engine.stats.tick,
+        title: "Mission complete",
+        detail: `Run completed at tick ${engine.stats.tick}.`,
+        severity: "success",
+        durationMs: 3500,
+      };
+      setSpotlightEvents((prev) => [...prev, completeEvent]);
     }
   }, [config.gridSize, updateState]);
 
@@ -75,9 +112,12 @@ export function useSimulation(initialConfig: SimulationConfig) {
     if (engineRef.current.isComplete()) {
       // Re-initialize if completed
       engineRef.current = new SimulationEngine(config);
+      resetSpotlightCursor();
       hasSavedRef.current = false;
       setSaveStatus({ state: "idle" });
       updateState();
+      hasMissionEventRef.current = false;
+      setSpotlightEvents([]);
     }
     setIsRunning(true);
   }, [config, updateState]);
@@ -89,8 +129,11 @@ export function useSimulation(initialConfig: SimulationConfig) {
   const reset = useCallback(() => {
     setIsRunning(false);
     engineRef.current = new SimulationEngine(config);
+    resetSpotlightCursor();
     hasSavedRef.current = false;
     setSaveStatus({ state: "idle" });
+    hasMissionEventRef.current = false;
+    setSpotlightEvents([]);
     updateState();
   }, [config, updateState]);
 
@@ -98,6 +141,7 @@ export function useSimulation(initialConfig: SimulationConfig) {
     setIsRunning(false);
     setConfig(newConfig);
     engineRef.current = new SimulationEngine(newConfig);
+    resetSpotlightCursor();
     hasSavedRef.current = false;
     setSaveStatus({ state: "idle" });
     updateState();
@@ -111,6 +155,7 @@ export function useSimulation(initialConfig: SimulationConfig) {
     isRunning,
     speed,
     saveStatus,
+    spotlightEvents,
     start,
     pause,
     reset,
