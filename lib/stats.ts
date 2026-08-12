@@ -47,12 +47,13 @@ export async function saveRun(
 
       if (error) {
         console.error("Supabase insert error:", error);
-        return { success: false, error: error.message };
+        // Return a generic, user-facing message so raw backend errors are not shown in the UI
+        return { success: false, error: "Couldn't save run." };
       }
       return { success: true };
     } catch (err: any) {
       console.error("Supabase connection exception:", err);
-      return { success: false, error: err?.message || "Connection failed" };
+      return { success: false, error: "Couldn't save run." };
     }
   }
 
@@ -78,12 +79,15 @@ export async function fetchRuns(limit = 20): Promise<{
         .limit(limit);
 
       if (error) {
-        supabaseError = error.message;
+        console.error("Supabase fetch error:", error);
+        // Use a generic message for UI
+        supabaseError = "Couldn't load run history.";
       } else if (data) {
         supabaseRuns = data as SimulationRunRecord[];
       }
     } catch (e: any) {
-      supabaseError = e?.message || "Failed to connect to Supabase";
+      console.error("Supabase fetch exception:", e);
+      supabaseError = "Couldn't load run history.";
     }
   }
 
