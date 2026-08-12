@@ -1,4 +1,6 @@
-@import "tailwindcss";
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
 
 :root {
   --bg-primary: #0B1220;
@@ -84,6 +86,6 @@ body {
 @media (prefers-reduced-motion: reduce) {
   .animate-victim-pulse,
   .animate-status-pulse {
-    animation: none !span;
+    animation: none !important;
   }
 }

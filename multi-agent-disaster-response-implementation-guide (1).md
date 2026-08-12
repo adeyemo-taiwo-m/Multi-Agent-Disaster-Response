@@ -1,10 +1,13 @@
 # Multi-Agent Disaster Response and Emergency Evacuation System
+
 ## Full Implementation Guide
 
 ### Purpose of this document
+
 This document is a complete technical specification for building a browser-based multi-agent simulation demonstrating coordination, communication, and distributed decision-making in a disaster response and evacuation scenario. It is written to be followed directly by an AI coding agent (e.g. Claude Code, Cursor, etc.) to scaffold and implement the project with minimal ambiguity. Each section specifies what to build, why, the exact data shapes to use, and how pieces connect.
 
 ### Tech stack
+
 - Language: TypeScript
 - Framework: Next.js (App Router) with React
 - Styling: Tailwind CSS
@@ -13,6 +16,28 @@ This document is a complete technical specification for building a browser-based
 - Hosting: Vercel
 
 ---
+
+## 0.5 Git workflow (mandatory, follow throughout)
+
+Initialize git and commit continuously as you build — never wait until the end to commit everything at once.
+
+**Setup, first thing after `create-next-app`:**
+
+Create a GitHub/GitLab repo and push before writing any application code, so history exists from step 1.
+
+**Commit after every meaningful unit of work — not just at the end of a session.** A meaningful unit means: one file or one tightly related group of files becomes functional and doesn't break the build. In practice this means committing after each numbered step in section 11's build order, and often more than once within a step if it's large (e.g. `types.ts` gets its own commit before `grid.ts` starts).
+
+**Rules:**
+
+1. Never let more than ~30–45 minutes of work, or more than one component/module, sit uncommitted.
+2. Before committing, confirm the app still builds/runs (`npm run dev` or `npm run build`) — don't commit known-broken states to the main branch. If you must checkpoint broken work, commit to a scratch branch or use `git commit -m "wip: ..."` explicitly labeled as WIP.
+3. Write commit messages in Conventional Commits style: `feat:`, `fix:`, `refactor:`, `chore:`, `docs:`, `style:`, `test:`. Example: `feat: implement MessageBus with send/getMessagesFor/clear`.
+4. One logical change per commit — don't bundle "implement RescueAgent" with an unrelated Tailwind tweak. Split into separate commits if unrelated.
+5. Never commit `.env.local` or any file containing real Supabase keys. Confirm `.gitignore` covers it before the first commit that touches env config.
+6. After finishing each top-level section of this guide (grid, message bus, each agent, engine, each UI component, Supabase integration), do a final commit for that section even if you committed partial progress along the way, so history has a clear checkpoint per feature.
+7. Push to the remote after every commit, or at minimum every few commits — don't let local history diverge from the remote for long stretches.
+
+**Why this matters for this project specifically:** the report needs to demonstrate incremental, well-engineered work, not a single dump commit — a clean commit history is easy evidence of process if a lecturer asks to see it, and frequent commits mean a broken agent/engine change can be reverted in isolation instead of losing the whole session's work.
 
 ## 0. Project setup (exact commands)
 
@@ -27,12 +52,14 @@ npm install @supabase/supabase-js
 When prompted by `create-next-app`, accept defaults (App Router: yes, ESLint: yes, Tailwind: yes).
 
 Create `.env.local` in the project root (never commit this file — it should already be in `.gitignore` by default):
+
 ```
 NEXT_PUBLIC_SUPABASE_URL=your-project-url-here
 NEXT_PUBLIC_SUPABASE_ANON_KEY=your-anon-key-here
 ```
 
 Also create a checked-in `.env.local.example` with the same two keys but empty/placeholder values, so teammates know what env vars they need to set locally:
+
 ```
 NEXT_PUBLIC_SUPABASE_URL=
 NEXT_PUBLIC_SUPABASE_ANON_KEY=
@@ -115,7 +142,7 @@ export type MessageType =
 
 export interface AgentMessage {
   id: string;
-  from: string;       // agent id
+  from: string; // agent id
   type: MessageType;
   payload: {
     x?: number;
@@ -152,6 +179,7 @@ export interface SimulationRunRecord {
 ## 3. The grid (`/lib/grid.ts`)
 
 Responsibilities:
+
 - Generate a grid of a given size (e.g. 15x15).
 - Randomly place blocked cells (obstacles), danger zones, and victims (evacuees) on it, based on configurable percentages.
 - Provide helper functions: `getNeighbors(grid, x, y)`, `isWalkable(cell)`, `getCell(grid, x, y)`, `markRescued(grid, x, y)`.
@@ -159,15 +187,18 @@ Responsibilities:
 Example function signatures the agent should implement:
 
 ```ts
-export function generateGrid(size: number, options: {
-  blockedPercent: number;
-  dangerPercent: number;
-  victimCount: number;
-}): Grid
+export function generateGrid(
+  size: number,
+  options: {
+    blockedPercent: number;
+    dangerPercent: number;
+    victimCount: number;
+  },
+): Grid;
 
-export function getNeighbors(grid: Grid, x: number, y: number): Cell[]
+export function getNeighbors(grid: Grid, x: number, y: number): Cell[];
 
-export function isWalkable(cell: Cell): boolean
+export function isWalkable(cell: Cell): boolean;
 ```
 
 Keep obstacle/danger/victim placement random but seeded (use a simple seedable random function) so runs can be reproduced for the report if needed.
@@ -179,7 +210,11 @@ Keep obstacle/danger/victim placement random but seeded (use a simple seedable r
 Implement a simple breadth-first search (BFS) that returns the next step (or full path) from an agent's current position to a target position, treating `blocked` cells as impassable.
 
 ```ts
-export function findPath(grid: Grid, start: {x:number,y:number}, target: {x:number,y:number}): {x:number,y:number}[]
+export function findPath(
+  grid: Grid,
+  start: { x: number; y: number },
+  target: { x: number; y: number },
+): { x: number; y: number }[];
 ```
 
 Each agent, on its turn, calls this to get its next move rather than moving randomly once a target is known. Scouts without a target can move using a simple unexplored-cell-seeking heuristic or random walk.
@@ -194,11 +229,11 @@ This is the shared communication layer every agent reads from and writes to. Imp
 export class MessageBus {
   private messages: AgentMessage[] = [];
 
-  send(message: Omit<AgentMessage, "id" | "timestamp">): void
-  getMessagesFor(role: AgentRole, sinceTick?: number): AgentMessage[]
-  getAll(): AgentMessage[]
-  clear(): void
-  count(): number
+  send(message: Omit<AgentMessage, "id" | "timestamp">): void;
+  getMessagesFor(role: AgentRole, sinceTick?: number): AgentMessage[];
+  getAll(): AgentMessage[];
+  clear(): void;
+  count(): number;
 }
 ```
 
@@ -209,6 +244,7 @@ Design note for the agent: keep this dead simple. `send()` pushes to the array w
 ## 6. Agents (`/lib/agents/`)
 
 ### 6.1 BaseAgent.ts
+
 A shared base class or interface all agent types extend:
 
 ```ts
@@ -228,32 +264,38 @@ export abstract class BaseAgent {
 Every concrete agent implements `perceive → decide → act` each simulation tick. This three-step cycle is the core "agent loop" and should be described explicitly in the report as demonstrating autonomous, distributed behavior (no external controller calls into an agent's internals).
 
 ### 6.2 ScoutAgent.ts
+
 - `perceive`: looks at neighboring cells via `getNeighbors`.
 - `decide`: if a victim cell is adjacent/visible, decide to report it; otherwise pick a direction to continue exploring (random walk or frontier-based exploration).
 - `act`: moves one step; if a victim was found, calls `bus.send({ type: "victim_found", ... })`.
 
 ### 6.3 RescueAgent.ts
+
 - `perceive`: reads messages of type `victim_found` from the bus that don't yet have a claim.
 - `decide`: if idle and an unclaimed victim message exists, claim it by sending a `claim_victim` message (this is how conflict avoidance happens without a central controller — first claim wins, other rescuers see the claim and skip that victim).
 - `act`: moves toward the claimed victim's coordinates using `findPath`; once adjacent, marks the victim rescued, updates the grid, and sends a `victim_rescued` message.
 
 **Claim tie-breaker (important, prevents race-condition bugs)**: within a single tick, it's possible for two idle Rescue agents to both perceive the same unclaimed `victim_found` message before either has acted, and both attempt to claim it. To resolve this deterministically:
+
 1. Process agents in a fixed, stable order each tick (e.g. the order they appear in the `agents` array — do not shuffle it).
 2. When a Rescue agent decides to claim a victim, it writes the claim to the message bus immediately, before the engine moves to the next agent in the loop (claims are synchronous within a tick, not batched at the end).
-3. Every Rescue agent's `decide()` must check the *latest* state of the bus, including claims made earlier in the same tick by agents processed before it, never a cached snapshot taken at the start of the tick.
+3. Every Rescue agent's `decide()` must check the _latest_ state of the bus, including claims made earlier in the same tick by agents processed before it, never a cached snapshot taken at the start of the tick.
 
 This way, whichever Rescue agent is processed first in the loop order wins any same-tick conflict, and agents processed later in that same tick will already see the claim and skip that victim. State this rule explicitly in the report as the conflict-resolution mechanism.
 
 **Stuck-agent fallback**: if `findPath` returns an empty array (target unreachable, e.g. victim is fully walled off by blocked cells), the Rescue agent must not crash or freeze. It should release its claim (send a message marking the victim as `unreachable`), return to `idle`, and become eligible to claim a different victim next tick.
 
 ### 6.4 CoordinatorAgent.ts
+
 Two acceptable designs — pick one and document the choice in the report:
+
 - **Lightweight/pure-distributed version**: Coordinator only listens and logs, does not assign tasks (claiming happens directly between Rescue agents via message bus). This is the simplest and still satisfies "distributed decision-making" since no agent is centrally controlled.
 - **Assisted version**: Coordinator listens for `victim_found` messages and, if multiple rescuers are idle, sends a `task_assignment` message suggesting which rescuer should take which victim. Rescuers may still override this if circumstances change. This version more visibly demonstrates "coordination" for the report.
 
 Recommended: implement the assisted version since it gives clearer material to point to for the coordination requirement, while agents can still act independently if the coordinator's suggestion is stale.
 
 ### 6.5 EvacueeAgent.ts
+
 Simplest agent. Stays in place with status `idle` until a Rescue agent reaches it, then flips to `rescued`. Optionally, add basic self-preservation logic (move away from adjacent danger cells) as a stretch feature.
 
 ---
@@ -270,12 +312,12 @@ export class SimulationEngine {
   stats: SimulationStats;
   tickCount: number;
 
-  maxTicks: number;   // hard cutoff, e.g. gridSize * 20, prevents infinite loops
+  maxTicks: number; // hard cutoff, e.g. gridSize * 20, prevents infinite loops
 
-  constructor(config: SimulationConfig)
-  tick(): void        // runs one perceive→decide→act cycle for every agent
-  isComplete(): boolean  // true when all victims rescued, all remaining victims are unreachable, or maxTicks hit
-  reset(): void
+  constructor(config: SimulationConfig);
+  tick(): void; // runs one perceive→decide→act cycle for every agent
+  isComplete(): boolean; // true when all victims rescued, all remaining victims are unreachable, or maxTicks hit
+  reset(): void;
 }
 
 export interface SimulationConfig {
@@ -292,6 +334,7 @@ export interface SimulationConfig {
 `tick()` should loop through all agents calling `perceive`, then `decide`, then `act`, in that order for each agent (perceive-decide-act per agent, agent by agent, is simplest to implement correctly; a stricter simultaneous-perceive-then-simultaneous-act model is a valid stretch improvement but not required).
 
 **Deadlock and timeout handling (required, not optional)**: without a cutoff, a simulation where one or more victims are unreachable (walled off by blocked cells) will run forever, since it will never reach 100% rescued. Handle this explicitly:
+
 - Track `maxTicks` (a sensible default is `gridSize * 20`). If `tickCount` exceeds `maxTicks`, the engine must stop and mark the run as ended regardless of rescue completion.
 - `isComplete()` returns true if either: all victims have status `rescued`, OR every remaining un-rescued victim has been marked `unreachable` by a Rescue agent's stuck-agent fallback (see section 6.3), OR `tickCount >= maxTicks`.
 - When the run ends this way, the stats/summary shown to the user must distinguish between "all victims rescued" and "simulation ended with N victims unreachable/timed out" — do not silently report it as a full success.
@@ -317,18 +360,23 @@ The interval should be cleared on pause/unmount. Expose the current grid/agents/
 ## 9. UI components
 
 ### Grid.tsx
+
 Renders a `<div>` grid using CSS grid (`display: grid; grid-template-columns: repeat(size, 1fr)`), one `Cell` per grid position, with `AgentMarker`s absolutely positioned or rendered inside the relevant cell based on agent x/y.
 
 ### Cell.tsx
+
 Colors by status: `empty` = light gray, `blocked` = dark gray, `danger` = red/orange, `safe` = green, `hasVictim` = yellow, using Tailwind classes.
 
 Add a CSS transition on the agent marker's position so movement glides between cells instead of jumping instantly. Since the marker's position is driven by inline style (`left`/`top` percentages) or a CSS grid position tied to x/y, apply `transition: all 200ms ease-in-out` (or a Tailwind `transition-all duration-200` class) to `AgentMarker.tsx`. This is a cheap but important detail for how polished the live demo looks.
 
 ### AgentMarker.tsx
+
 Small colored/icon marker per role (e.g. blue circle = scout, purple = rescuer, gold = coordinator, gray = evacuee). Use distinct Tailwind color classes per role for instant visual read during the demo. Apply the transition described above.
 
 ### ConfigPanel.tsx (new, required)
+
 Shown before the simulation starts (or collapsible during setup). Lets the user set, via number inputs or sliders, before clicking Start:
+
 - Grid size (e.g. 10–25)
 - Number of Scout agents
 - Number of Rescue agents
@@ -339,13 +387,17 @@ Shown before the simulation starts (or collapsible during setup). Lets the user 
 These values populate the `SimulationConfig` object passed into `useSimulation`. Without this panel everything is hardcoded, which makes it impossible to demonstrate the system under different conditions during the presentation (a likely thing a lecturer will ask to see). Disable config inputs while a simulation is running; re-enable after Reset.
 
 ### Controls.tsx
+
 Buttons: Start, Pause, Reset, Step Once, and a speed slider (interval ms). Wire directly to the `useSimulation` hook's functions. When the run ends via timeout/unreachable victims rather than full rescue, Controls or StatsPanel should visibly flag that (see section 7's deadlock handling), not just show a generic "complete" state.
 
 ### StatsPanel.tsx
+
 Live-updating display of: tick count, victims rescued / total, messages sent, elapsed time, and the run's end reason once finished (`all rescued` vs `timed out` vs `N unreachable`).
 
 ### RunHistory.tsx
+
 Fetches past runs from Supabase and displays them in a small table for comparison (see section 10). Must handle three explicit UI states:
+
 - **Loading**: show a simple "Loading past runs…" placeholder while the fetch is in flight.
 - **Error**: if `fetchRuns` fails (network issue, bad env vars, RLS misconfigured), show a visible inline message like "Couldn't load run history" rather than failing silently or leaving a blank table forever.
 - **Empty**: if the fetch succeeds but returns zero rows (first ever run), show "No runs yet — completed simulations will appear here."
@@ -357,12 +409,15 @@ Apply the same three states (loading/error/success) to the `saveRun` call after 
 ## 10. Supabase integration
 
 ### 10.1 Setup
+
 Install the client:
+
 ```
 npm install @supabase/supabase-js
 ```
 
 Create `/lib/supabaseClient.ts`:
+
 ```ts
 import { createClient } from "@supabase/supabase-js";
 
@@ -375,6 +430,7 @@ export const supabase = createClient(supabaseUrl, supabaseAnonKey);
 Add the two environment variables to `.env.local` (values come from the Supabase project dashboard, Settings → API). Never commit `.env.local`.
 
 ### 10.2 Database schema
+
 In the Supabase SQL editor, create the results table:
 
 ```sql
@@ -405,6 +461,7 @@ create policy "Allow anonymous select" on simulation_runs
 ```
 
 ### 10.3 Saving a run
+
 When `SimulationEngine.isComplete()` becomes true, call a save function:
 
 ```ts
@@ -424,6 +481,7 @@ export async function saveRun(stats: SimulationStats, gridSize: number) {
 Call this once from the hook when completion is first detected (guard against calling it multiple times per run with a flag).
 
 ### 10.4 Reading run history
+
 ```ts
 export async function fetchRuns(limit = 20) {
   const { data, error } = await supabase
@@ -467,6 +525,7 @@ Call this in `RunHistory.tsx` on mount (and optionally refresh it after each new
 ## 12. What to emphasize in the report
 
 When writing up the project, explicitly map the implementation back to the three required concepts:
+
 - **Coordination**: point to the Coordinator agent's task assignment logic and the claim-based conflict avoidance between Rescue agents.
 - **Communication**: point to the `MessageBus` class and the defined `AgentMessage` types as the communication protocol.
 - **Distributed decision-making**: point to the `perceive → decide → act` cycle running independently inside each agent, with no central function directly controlling agent movement — each agent only reacts to messages and its own local view of the grid.

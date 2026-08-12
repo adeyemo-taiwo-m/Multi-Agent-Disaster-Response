@@ -7,7 +7,7 @@ export interface Point {
 }
 
 export function findPath(grid: Grid, start: Point, target: Point): Point[] {
-  if (start.x === target.x && start.y === target.targetY) return [];
+  if (start.x === target.x && start.y === target.y) return [];
 
   const queue: Point[] = [start];
   const visited = new Set<string>();
