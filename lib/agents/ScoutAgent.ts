@@ -2,7 +2,6 @@ import { BaseAgent } from "./BaseAgent";
 import { Cell, Grid } from "../types";
 import { MessageBus } from "../messageBus";
 import { getNeighbors, isWalkable } from "../grid";
-import { findPath } from "../pathfinding";
 
 export class ScoutAgent extends BaseAgent {
   private visited: Set<string> = new Set();
@@ -16,7 +15,7 @@ export class ScoutAgent extends BaseAgent {
     this.visited.add(`${x},${y}`);
   }
 
-  perceive(grid: Grid, bus: MessageBus): void {
+  perceive(grid: Grid, _bus: MessageBus): void {
     const neighbors = getNeighbors(grid, this.x, this.y);
     this.perceivedVictims = [];
 

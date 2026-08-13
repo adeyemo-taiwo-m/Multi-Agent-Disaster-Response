@@ -2,7 +2,7 @@
 
 import React, { useState } from "react";
 import { SimulationConfig } from "../lib/types";
-import { Sliders, RefreshCw } from "lucide-react";
+import { Sliders } from "lucide-react";
 
 interface ConfigPanelProps {
   config: SimulationConfig;

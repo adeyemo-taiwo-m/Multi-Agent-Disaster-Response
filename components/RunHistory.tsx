@@ -3,7 +3,7 @@
 import React, { useEffect, useState } from "react";
 import { SimulationRunRecord } from "../lib/types";
 import { fetchRuns } from "../lib/stats";
-import { History, RefreshCw, Database } from "lucide-react";
+import { History, RefreshCw } from "lucide-react";
 
 interface RunHistoryProps {
   lastSavedAt?: number;
@@ -52,7 +52,7 @@ export const RunHistory: React.FC<RunHistoryProps> = ({ lastSavedAt }) => {
         </div>
       ) : error ? (
         <div className="py-6 text-center text-xs font-mono-telemetry text-[#EF4444] bg-[#EF4444]/10 rounded border border-[#EF4444]/20 p-3">
-          ⚠ Couldn't load run history ({error})
+          ⚠ Couldn&apos;t load run history ({error})
         </div>
       ) : runs.length === 0 ? (
         <div className="py-8 text-center text-xs font-mono-telemetry text-[#F8FAFC]/40 italic">

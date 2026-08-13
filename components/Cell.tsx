@@ -5,10 +5,10 @@ import { Cell as CellType } from "../lib/types";
 
 interface CellProps {
   cell: CellType;
-  gridSize: number;
+  gridSize?: number;
 }
 
-export const Cell: React.FC<CellProps> = ({ cell, gridSize }) => {
+export const Cell: React.FC<CellProps> = ({ cell }) => {
   const { status, x, y } = cell;
 
   const getStatusClasses = () => {

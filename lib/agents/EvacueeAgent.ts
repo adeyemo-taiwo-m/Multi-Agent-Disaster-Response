@@ -9,7 +9,7 @@ export class EvacueeAgent extends BaseAgent {
     this.status = "idle";
   }
 
-  perceive(grid: Grid, bus: MessageBus): void {
+  perceive(grid: Grid, _bus: MessageBus): void {
     const currentCell = getCell(grid, this.x, this.y);
     if (currentCell && currentCell.status === "safe") {
       this.status = "rescued";
@@ -20,7 +20,7 @@ export class EvacueeAgent extends BaseAgent {
     // Evacuees remain in place until rescued
   }
 
-  act(grid: Grid, bus: MessageBus): void {
+  act(_grid: Grid, _bus: MessageBus): void {
     // No action needed for stationary evacuees
   }
 }

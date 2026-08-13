@@ -1,8 +1,7 @@
 "use client";
 
 import React from "react";
-import { ButtonHTMLAttributes } from "react";
-import { Play, Zap, Compass, Shield } from "lucide-react";
+import { Play, Zap, Compass } from "lucide-react";
 
 interface BriefingScreenProps {
   onConfigure: () => void;
@@ -42,7 +41,7 @@ const BriefingScreen: React.FC<BriefingScreenProps> = ({ onConfigure, onRunDemo 
         <div className="rounded-xl border border-[#22D3EE]/15 bg-[#0B1220]/80 p-5">
           <p className="text-sm uppercase tracking-[0.3em] text-[#22D3EE] font-semibold mb-4">Presentation flow</p>
           <ol className="space-y-3 text-sm text-[#F8FAFC]/80 leading-6 list-decimal list-inside">
-            <li>Use "Run Demo Scenario" to start a tuned, seeded mission.</li>
+            <li>Use &quot;Run Demo Scenario&quot; to start a tuned, seeded mission.</li>
             <li>Point out the on-screen Event Spotlight cards.</li>
             <li>Highlight rescue completion and unreachable victim warnings.</li>
             <li>Wrap up with the end-reason and mission stats panel.</li>

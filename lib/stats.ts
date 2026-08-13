@@ -51,7 +51,7 @@ export async function saveRun(
         return { success: false, error: "Couldn't save run." };
       }
       return { success: true };
-    } catch (err: any) {
+    } catch (err: unknown) {
       console.error("Supabase connection exception:", err);
       return { success: false, error: "Couldn't save run." };
     }
@@ -85,7 +85,7 @@ export async function fetchRuns(limit = 20): Promise<{
       } else if (data) {
         supabaseRuns = data as SimulationRunRecord[];
       }
-    } catch (e: any) {
+    } catch (e: unknown) {
       console.error("Supabase fetch exception:", e);
       supabaseError = "Couldn't load run history.";
     }

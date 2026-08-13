@@ -8,7 +8,7 @@ export class CoordinatorAgent extends BaseAgent {
     this.status = "idle";
   }
 
-  perceive(grid: Grid, bus: MessageBus): void {
+  perceive(_grid: Grid, _bus: MessageBus): void {
     // Coordinator stays operational
     this.status = "idle";
   }
@@ -17,7 +17,7 @@ export class CoordinatorAgent extends BaseAgent {
     // Decision handled with active agent pool in act
   }
 
-  actWithAgents(grid: Grid, bus: MessageBus, allAgents: BaseAgent[]): void {
+  actWithAgents(_grid: Grid, bus: MessageBus, allAgents: BaseAgent[]): void {
     const allMessages = bus.getAll();
 
     // Collect claimed, rescued, or unreachable victims
@@ -71,7 +71,7 @@ export class CoordinatorAgent extends BaseAgent {
     }
   }
 
-  act(grid: Grid, bus: MessageBus): void {
+  act(_grid: Grid, _bus: MessageBus): void {
     // Default act method; actWithAgents is invoked by SimulationEngine when agent array is present
   }
 }
