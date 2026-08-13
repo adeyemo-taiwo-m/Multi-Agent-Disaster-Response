@@ -5,6 +5,7 @@ import {
   SimulationStats,
 } from "./types";
 import { generateGrid } from "./grid";
+import { createSeededRandom, RandomFn } from "./random";
 import { MessageBus } from "./messageBus";
 import { BaseAgent } from "./agents/BaseAgent";
 import { ScoutAgent } from "./agents/ScoutAgent";
@@ -23,10 +24,13 @@ export class SimulationEngine {
 
   constructor(config: SimulationConfig) {
     this.config = config;
+    const gridRandomFn: RandomFn =
+      config.seed !== undefined ? createSeededRandom(config.seed) : Math.random;
     this.grid = generateGrid(config.gridSize, {
       blockedPercent: config.blockedPercent,
       dangerPercent: config.dangerPercent,
       victimCount: config.victimCount,
+      randomFn: gridRandomFn,
     });
     this.bus = new MessageBus();
     this.tickCount = 0;
@@ -44,9 +48,12 @@ export class SimulationEngine {
 
     this.agents = [];
 
+    const scoutRandomFn: RandomFn =
+      config.seed !== undefined ? createSeededRandom(config.seed + 1) : Math.random;
+
     // Instantiate Scout Agents (spawn in safe corner 0,0)
     for (let i = 0; i < config.scoutCount; i++) {
-      this.agents.push(new ScoutAgent(`scout-${i + 1}`, 0, 0));
+      this.agents.push(new ScoutAgent(`scout-${i + 1}`, 0, 0, scoutRandomFn));
     }
 
     // Instantiate Rescue Agents (spawn in safe corner 1,0)

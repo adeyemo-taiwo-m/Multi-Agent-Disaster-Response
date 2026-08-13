@@ -10,9 +10,11 @@ import { DEMO_SCENARIO } from "../lib/demoScenarios";
 import { StatsPanel } from "../components/StatsPanel";
 import { ConfigPanel } from "../components/ConfigPanel";
 import { RunHistory } from "../components/RunHistory";
+import BriefingScreen from "../components/BriefingScreen";
 import { Shield, Eye, Radio, UserCheck, Activity } from "lucide-react";
 
 export default function Home() {
+  const [showBriefing, setShowBriefing] = useState(true);
   const {
     config,
     grid,
@@ -72,6 +74,22 @@ export default function Home() {
     setDisplayedSpotlights((prev) => prev.filter((p) => p.id !== id));
   };
 
+  const handleStart = () => {
+    setShowBriefing(false);
+    start();
+  };
+
+  const handleReset = () => {
+    reset();
+    setShowBriefing(true);
+  };
+
+  const handleRunDemo = () => {
+    setShowBriefing(false);
+    updateConfig(DEMO_SCENARIO);
+    start();
+  };
+
   return (
     <main className="min-h-screen bg-[#0B1220] text-[#F8FAFC] p-4 md:p-6 font-sans">
       {/* Top Header Console Bar */}
@@ -97,9 +115,17 @@ export default function Home() {
       </header>
 
       {/* Main Grid & Instrument Layout */}
-      <div className="max-w-7xl mx-auto grid grid-cols-1 lg:grid-cols-12 gap-6">
-        {/* Hero Section: Simulation Grid Map (7 cols on desktop) */}
-        <section className="lg:col-span-7 space-y-4">
+      {showBriefing ? (
+        <div className="max-w-7xl mx-auto">
+          <BriefingScreen
+            onConfigure={() => setShowBriefing(false)}
+            onRunDemo={handleRunDemo}
+          />
+        </div>
+      ) : (
+        <div className="max-w-7xl mx-auto grid grid-cols-1 lg:grid-cols-12 gap-6">
+          {/* Hero Section: Simulation Grid Map (7 cols on desktop) */}
+          <section className="lg:col-span-7 space-y-4">
           <div className="bg-[#16243A] border border-[#22D3EE]/15 rounded-md p-4 space-y-3">
             <div className="flex items-center justify-between border-b border-[#22D3EE]/15 pb-2">
               <h2 className="font-mono-telemetry text-xs uppercase tracking-wider text-[#22D3EE] font-semibold flex items-center gap-1.5">
@@ -156,17 +182,13 @@ export default function Home() {
         <section className="lg:col-span-5 space-y-4">
           <Controls
             isRunning={isRunning}
-            onStart={start}
+            onStart={handleStart}
             onPause={pause}
-            onReset={reset}
+            onReset={handleReset}
             onStepOnce={stepOnce}
             speed={speed}
             onSpeedChange={setSpeed}
-            onRunDemo={() => {
-              updateConfig(DEMO_SCENARIO);
-              // ensure simulation starts with demo config
-              start();
-            }}
+            onRunDemo={handleRunDemo}
             isComplete={stats.endedAt !== undefined}
           />
 
@@ -184,6 +206,7 @@ export default function Home() {
           />
         </section>
       </div>
+      )}
     </main>
   );
 }

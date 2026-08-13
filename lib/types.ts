@@ -32,7 +32,7 @@ export type MessageType =
 
 export interface AgentMessage {
   id: string;
-  from: string;       // agent id
+  from: string; // agent id
   type: MessageType;
   payload: {
     x?: number;
@@ -88,4 +88,5 @@ export interface SimulationConfig {
   blockedPercent: number;
   dangerPercent: number;
   maxTicks?: number; // defaults to gridSize * 20 if not provided
+  seed?: number;
 }

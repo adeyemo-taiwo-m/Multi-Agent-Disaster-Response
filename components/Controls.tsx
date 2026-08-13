@@ -23,6 +23,7 @@ export const Controls: React.FC<ControlsProps> = ({
   onStepOnce,
   speed,
   onSpeedChange,
+  onRunDemo = () => {},
   isComplete,
 }) => {
   return (

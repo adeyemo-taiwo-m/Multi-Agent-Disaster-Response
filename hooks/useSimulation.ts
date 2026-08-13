@@ -2,6 +2,7 @@
 
 import { useCallback, useEffect, useRef, useState } from "react";
 import {
+  AgentMessage,
   AgentState,
   Grid,
   SimulationConfig,
@@ -30,6 +31,9 @@ export function useSimulation(initialConfig: SimulationConfig) {
   }>({ state: "idle" });
 
   const [spotlightEvents, setSpotlightEvents] = useState<SpotlightEvent[]>([]);
+  const [messages, setMessages] = useState<AgentMessage[]>(
+    engineRef.current.bus.getAll()
+  );
 
   const hasSavedRef = useRef<boolean>(false);
   const hasMissionEventRef = useRef<boolean>(false);
@@ -39,6 +43,7 @@ export function useSimulation(initialConfig: SimulationConfig) {
     setGrid([...engine.grid.map((row) => [...row])]);
     setAgents(engine.agents.map((a) => a.getState()));
     setStats({ ...engine.stats });
+    setMessages(engine.bus.getAll());
   }, []);
 
   const stepOnce = useCallback(() => {
@@ -53,7 +58,7 @@ export function useSimulation(initialConfig: SimulationConfig) {
 
     // Detect spotlight events from message bus after each tick
     try {
-      const newEvents = detectSpotlightEvents(engineRef.current.bus.getAll(), engineRef.current.tick);
+      const newEvents = detectSpotlightEvents(engineRef.current.bus.getAll(), engineRef.current.stats.tick);
       if (newEvents.length > 0) {
         setSpotlightEvents((prev) => [...prev, ...newEvents]);
       }
@@ -162,6 +167,6 @@ export function useSimulation(initialConfig: SimulationConfig) {
     stepOnce,
     setSpeed,
     updateConfig,
-    messages: engineRef.current.bus.getAll(),
+    messages,
   };
 }

@@ -1,4 +1,5 @@
 import { Cell, Grid } from "./types";
+import { createSeededRandom, RandomFn, shuffleWithRandom } from "./random";
 
 export function generateGrid(
   size: number,
@@ -6,6 +7,8 @@ export function generateGrid(
     blockedPercent: number;
     dangerPercent: number;
     victimCount: number;
+    seed?: number;
+    randomFn?: RandomFn;
   }
 ): Grid {
   const grid: Grid = [];
@@ -46,8 +49,10 @@ export function generateGrid(
     }
   }
 
-  // Shuffle available coordinates deterministically/randomly
-  const shuffled = [...availableCoords].sort(() => Math.random() - 0.5);
+  const random =
+    options.randomFn ??
+    (options.seed !== undefined ? createSeededRandom(options.seed) : Math.random);
+  const shuffled = shuffleWithRandom(availableCoords, random);
 
   const totalEmpty = shuffled.length;
   const numBlocked = Math.floor(totalEmpty * (options.blockedPercent / 100));

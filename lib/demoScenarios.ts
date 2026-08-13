@@ -10,6 +10,7 @@ export const DEMO_SCENARIO: SimulationConfig = {
   blockedPercent: 14,
   dangerPercent: 8,
   maxTicks: 300,
+  seed: DEMO_SEED,
 };
 
 export default DEMO_SCENARIO;

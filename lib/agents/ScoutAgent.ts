@@ -8,8 +8,11 @@ export class ScoutAgent extends BaseAgent {
   private visited: Set<string> = new Set();
   private perceivedVictims: Cell[] = [];
 
-  constructor(id: string, x: number, y: number) {
+  private randomFn: () => number;
+
+  constructor(id: string, x: number, y: number, randomFn: () => number = Math.random) {
     super(id, "scout", x, y);
+    this.randomFn = randomFn;
     this.visited.add(`${x},${y}`);
   }
 
@@ -74,9 +77,9 @@ export class ScoutAgent extends BaseAgent {
 
     let targetCell: Cell | undefined;
     if (unvisited.length > 0) {
-      targetCell = unvisited[Math.floor(Math.random() * unvisited.length)];
+      targetCell = unvisited[Math.floor(this.randomFn() * unvisited.length)];
     } else if (neighbors.length > 0) {
-      targetCell = neighbors[Math.floor(Math.random() * neighbors.length)];
+      targetCell = neighbors[Math.floor(this.randomFn() * neighbors.length)];
     }
 
     if (targetCell) {
