@@ -34,7 +34,7 @@ export const EventSpotlight: React.FC<EventSpotlightProps> = ({ events, onDismis
         return (
           <div
             key={e.id}
-            className="w-72 max-w-[28rem] p-3 rounded-md bg-[#16243A] border border-[rgba(34,211,238,0.2)] flex items-start gap-2.5 transition-opacity duration-150"
+            className="w-72 max-w-[28rem] p-3 rounded-md bg-[#0B1220]/75 backdrop-blur-md border border-[rgba(34,211,238,0.25)] shadow-[0_4px_16px_rgba(0,0,0,0.3)] flex items-start gap-2.5 transition-all duration-150"
           >
             <div className="flex-shrink-0 mt-1">
               <div className={`w-2 h-2 rounded-full ${indicatorColor}`} />
@@ -44,7 +44,7 @@ export const EventSpotlight: React.FC<EventSpotlightProps> = ({ events, onDismis
               <div className="font-mono text-xs font-semibold text-[#F8FAFC]">
                 {e.title}
               </div>
-              <div className="text-xs text-[#F8FAFC]/70 mt-0.5 leading-relaxed">
+              <div className="text-xs text-[#F8FAFC]/75 mt-0.5 leading-relaxed">
                 {e.detail}
               </div>
             </div>
