@@ -2,7 +2,6 @@
 
 import React from "react";
 import { AgentState } from "../lib/types";
-import { Shield, Eye, Radio, UserCheck } from "lucide-react";
 
 interface AgentMarkerProps {
   agent: AgentState;
@@ -12,42 +11,59 @@ interface AgentMarkerProps {
 export const AgentMarker: React.FC<AgentMarkerProps> = ({ agent, gridSize }) => {
   const { role, x, y, status, id } = agent;
 
-  // Percentage positioning for CSS smooth glide transition
+  // Percentage positioning for CSS smooth glide transition (200ms ease-in-out)
   const leftPercent = (x / gridSize) * 100;
   const topPercent = (y / gridSize) * 100;
   const sizePercent = (1 / gridSize) * 100;
 
-  const renderRoleIcon = () => {
+  const renderRoleShape = () => {
     switch (role) {
       case "scout":
+        // Scout: small circle, hollow ring — "still searching"
         return (
-          <div className="w-full h-full rounded-full border-2 border-[#22D3EE] bg-[#0B1220]/80 flex items-center justify-center text-[#22D3EE] shadow-[0_0_8px_rgba(34,211,238,0.5)]">
-            <Eye className="w-3/5 h-3/5" />
+          <div className="w-full h-full flex items-center justify-center p-0.5">
+            <div className="w-4/5 h-4/5 rounded-full border-2 border-[#22D3EE] bg-[#0B1220]/60 flex items-center justify-center">
+              <div className="w-1 h-1 rounded-full bg-[#22D3EE]" />
+            </div>
           </div>
         );
+
       case "rescuer":
+        // Rescuer: emergency orange, filled triangle pointing toward response direction
         return (
-          <div className="w-full h-full rounded-md bg-[#F97316] text-[#0B1220] flex items-center justify-center font-bold shadow-[0_0_8px_rgba(249,115,22,0.6)] transform rotate-45">
-            <Shield className="w-3/5 h-3/5 transform -rotate-45" />
+          <div className="w-full h-full flex items-center justify-center p-0.5">
+            <svg viewBox="0 0 24 24" className="w-4/5 h-4/5 text-[#F97316] fill-current">
+              <polygon points="12,3 22,21 2,21" />
+            </svg>
           </div>
         );
+
       case "coordinator":
+        // Coordinator: filled diamond shape, stays stationary
         return (
-          <div className="w-full h-full rounded-sm bg-[#FACC15] text-[#0B1220] flex items-center justify-center font-bold shadow-[0_0_8px_rgba(250,204,21,0.6)] transform rotate-45">
-            <Radio className="w-3/5 h-3/5 transform -rotate-45" />
+          <div className="w-full h-full flex items-center justify-center p-0.5">
+            <div className="w-3/5 h-3/5 bg-[#FACC15] rotate-45 rounded-[1px] flex items-center justify-center">
+              <div className="w-1.5 h-1.5 bg-[#0B1220] rounded-full" />
+            </div>
           </div>
         );
+
       case "evacuee":
       default:
+        // Evacuee: small square, upgrades to --success filled square when rescued
         if (status === "rescued") {
           return (
-            <div className="w-full h-full rounded-sm bg-[#22C55E] text-[#0B1220] flex items-center justify-center shadow-[0_0_6px_rgba(34,197,94,0.5)]">
-              <UserCheck className="w-3/5 h-3/5" />
+            <div className="w-full h-full flex items-center justify-center p-0.5">
+              <div className="w-3/5 h-3/5 bg-[#22C55E] rounded-[2px] flex items-center justify-center text-[#0B1220] font-bold text-[8px]">
+                ✓
+              </div>
             </div>
           );
         }
         return (
-          <div className="w-full h-full rounded-sm bg-[#F8FAFC]/60 border border-[#F8FAFC]/40 flex items-center justify-center" />
+          <div className="w-full h-full flex items-center justify-center p-0.5">
+            <div className="w-3/5 h-3/5 bg-[#F8FAFC]/65 border border-[#F8FAFC]/40 rounded-[2px]" />
+          </div>
         );
     }
   };
@@ -61,9 +77,12 @@ export const AgentMarker: React.FC<AgentMarkerProps> = ({ agent, gridSize }) => 
         width: `${sizePercent}%`,
         height: `${sizePercent}%`,
       }}
-      title={`${id} (${role}) - ${status}`}
+      title={`${id} (${role}) — ${status}`}
+      aria-label={`${role} agent ${id}, status: ${status}, at (${x}, ${y})`}
     >
-      {renderRoleIcon()}
+      {renderRoleShape()}
     </div>
   );
 };
+
+export default AgentMarker;

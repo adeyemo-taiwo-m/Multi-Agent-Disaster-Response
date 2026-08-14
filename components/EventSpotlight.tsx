@@ -23,30 +23,43 @@ export const EventSpotlight: React.FC<EventSpotlightProps> = ({ events, onDismis
 
   return (
     <div className="absolute top-2 right-2 flex flex-col gap-2 z-30 pointer-events-auto">
-      {visible.map((e) => (
-        <div
-          key={e.id}
-          className={`w-72 max-w-[28rem] p-2 rounded-md backdrop-blur-sm border border-white/6 shadow-lg flex items-start gap-3 transition-opacity duration-200 animate-fade-in`}>
-          <div className="flex-shrink-0 mt-0.5">
-            <div
-              className={`w-3 h-3 rounded-full ${
-                e.severity === "success" ? "bg-[#22C55E]" : e.severity === "warning" ? "bg-[#F97316]" : "bg-[#22D3EE]"
-              }`} />
-          </div>
+      {visible.map((e) => {
+        let indicatorColor = "bg-[#22D3EE]";
+        if (e.severity === "success") {
+          indicatorColor = "bg-[#22C55E]";
+        } else if (e.severity === "warning") {
+          indicatorColor = "bg-[#F97316]";
+        }
 
-          <div className="flex-1">
-            <div className="font-semibold text-sm">{e.title}</div>
-            <div className="text-xs text-white/70 mt-1">{e.detail}</div>
-          </div>
+        return (
+          <div
+            key={e.id}
+            className="w-72 max-w-[28rem] p-3 rounded-md bg-[#16243A] border border-[rgba(34,211,238,0.2)] flex items-start gap-2.5 transition-opacity duration-150"
+          >
+            <div className="flex-shrink-0 mt-1">
+              <div className={`w-2 h-2 rounded-full ${indicatorColor}`} />
+            </div>
 
-          <button
-            onClick={() => onDismiss && onDismiss(e.id)}
-            className="opacity-70 hover:opacity-100 text-white/60 p-1"
-            aria-label="Dismiss">
-            <X className="w-3 h-3" />
-          </button>
-        </div>
-      ))}
+            <div className="flex-1 min-w-0">
+              <div className="font-mono text-xs font-semibold text-[#F8FAFC]">
+                {e.title}
+              </div>
+              <div className="text-xs text-[#F8FAFC]/70 mt-0.5 leading-relaxed">
+                {e.detail}
+              </div>
+            </div>
+
+            <button
+              type="button"
+              onClick={() => onDismiss && onDismiss(e.id)}
+              className="text-[#F8FAFC]/40 hover:text-[#F8FAFC] p-0.5 rounded transition-colors duration-150 focus-console"
+              aria-label="Dismiss alert"
+            >
+              <X className="w-3.5 h-3.5" />
+            </button>
+          </div>
+        );
+      })}
     </div>
   );
 };
