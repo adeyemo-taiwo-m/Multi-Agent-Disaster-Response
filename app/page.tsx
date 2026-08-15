@@ -11,14 +11,11 @@ import { StatsPanel } from "../components/StatsPanel";
 import { ConfigPanel } from "../components/ConfigPanel";
 import { RunHistory } from "../components/RunHistory";
 import BriefingScreen from "../components/BriefingScreen";
-import { Activity, HelpCircle, Play } from "lucide-react";
+import { Activity, HelpCircle } from "lucide-react";
 
 export default function Home() {
   const [showBriefing, setShowBriefing] = useState(true);
   const [showBriefingOverlay, setShowBriefingOverlay] = useState(false);
-  // Fix #2: "armed" = briefing closed, grid visible at tick 0, but start() not yet called.
-  // Only relevant on the very first launch of a session — Resume (Fix #1) skips it entirely.
-  const [isArmed, setIsArmed] = useState(false);
 
   const {
     config,
@@ -46,14 +43,8 @@ export default function Home() {
     maxTicks: 300,
   });
 
-  const [displayedSpotlights, setDisplayedSpotlights] = useState<
-    SpotlightEvent[]
-  >([]);
-  const [highlightedCell, setHighlightedCell] = useState<{
-    x: number;
-    y: number;
-    severity?: string;
-  } | null>(null);
+  const [displayedSpotlights, setDisplayedSpotlights] = useState<SpotlightEvent[]>([]);
+  const [highlightedCell, setHighlightedCell] = useState<{ x: number; y: number; severity?: string } | null>(null);
   const timersRef = React.useRef<number[]>([]);
 
   useEffect(() => {
@@ -69,10 +60,7 @@ export default function Home() {
 
       if (e.x !== undefined && e.y !== undefined) {
         setHighlightedCell({ x: e.x, y: e.y, severity: e.severity });
-        const t2 = window.setTimeout(
-          () => setHighlightedCell(null),
-          e.durationMs,
-        );
+        const t2 = window.setTimeout(() => setHighlightedCell(null), e.durationMs);
         timersRef.current.push(t2);
       }
     });
@@ -87,28 +75,20 @@ export default function Home() {
     setDisplayedSpotlights((prev) => prev.filter((p) => p.id !== id));
   };
 
-  // Leaving the briefing now arms the sim (grid visible, frozen) instead of starting it immediately.
   const handleStart = () => {
     setShowBriefing(false);
-    setIsArmed(true);
+    start();
   };
 
   const handleReset = () => {
     reset();
     setShowBriefing(true);
     setShowBriefingOverlay(false);
-    setIsArmed(false);
   };
 
   const handleRunDemo = () => {
     setShowBriefing(false);
     updateConfig(DEMO_SCENARIO);
-    setIsArmed(true);
-  };
-
-  // The actual moment motion begins — only reachable from the armed state.
-  const handleBegin = () => {
-    setIsArmed(false);
     start();
   };
 
@@ -128,8 +108,7 @@ export default function Home() {
           <div className="flex items-center gap-2">
             <span className="w-2 h-2 rounded-full bg-[rgb(var(--accent))] animate-status-pulse" />
             <h1 className="text-xl md:text-2xl font-mono font-bold tracking-tight text-[rgb(var(--text-primary))]">
-              DISASTER RESPONSE{" "}
-              <span className="text-[rgb(var(--accent))]">SIMULATION</span>
+              DISASTER RESPONSE <span className="text-[rgb(var(--accent))]">SIMULATION</span>
             </h1>
           </div>
           <p className="text-xs font-mono text-[rgb(var(--text-primary)/0.65)] mt-1">
@@ -139,12 +118,8 @@ export default function Home() {
 
         <div className="flex items-center gap-3">
           <div className="bg-[rgb(var(--bg-secondary))] border border-[rgb(var(--accent)/0.15)] rounded-md px-3 py-1.5 text-xs font-mono flex items-center gap-2">
-            <span className="text-[rgb(var(--text-primary)/0.50)]">
-              PROTOCOL:
-            </span>
-            <span className="text-[rgb(var(--success))] font-semibold">
-              DISTRIBUTED BFS + BUS
-            </span>
+            <span className="text-[rgb(var(--text-primary)/0.50)]">PROTOCOL:</span>
+            <span className="text-[rgb(var(--success))] font-semibold">DISTRIBUTED BFS + BUS</span>
           </div>
 
           {!showBriefing && (
@@ -189,56 +164,13 @@ export default function Home() {
                   Tactical Map Telemetry ({config.gridSize}x{config.gridSize})
                 </h2>
                 <span className="text-xs font-mono text-[rgb(var(--text-primary)/0.50)]">
-                  Tick:{" "}
-                  <span className="text-[rgb(var(--accent))] font-semibold font-mono-telemetry">
-                    {stats.tick}
-                  </span>
+                  Tick: <span className="text-[rgb(var(--accent))] font-semibold font-mono-telemetry">{stats.tick}</span>
                 </span>
               </div>
 
-              {/* Relative wrapper so the armed-state callout can sit centered over the grid */}
-              <div className="relative">
-                <Grid
-                  grid={grid}
-                  agents={agents}
-                  highlightedCell={highlightedCell}
-                >
-                  <EventSpotlight
-                    events={displayedSpotlights}
-                    onDismiss={handleDismiss}
-                  />
-                </Grid>
-
-                {/* Fix #2: calm first frame — grid is visible and frozen, nothing moves until Begin */}
-                {/* Fix #2: calm first frame — grid is visible and frozen, nothing moves until Begin */}
-                {isArmed && (
-                  <div className="absolute inset-0 z-30 flex items-center justify-center p-4 pointer-events-none">
-                    <div className="bg-[rgb(var(--bg-secondary)/0.97)] border border-[rgb(var(--accent)/0.25)] rounded-md p-4 max-w-xs text-center pointer-events-auto shadow-none">
-                      <p className="text-xs font-mono text-[rgb(var(--text-primary)/0.85)] leading-relaxed mb-3">
-                        This is the board. Cyan circles are Scouts — they search
-                        for victims (yellow squares). Nothing moves yet.
-                      </p>
-                      <div className="flex gap-2">
-                        <button
-                          type="button"
-                          onClick={handleOpenBriefingOverlay}
-                          className="flex-1 inline-flex items-center justify-center gap-1.5 rounded-md border border-[rgb(var(--accent)/0.25)] bg-transparent px-3 py-2 text-xs font-mono text-[rgb(var(--text-primary))] hover:bg-[rgb(var(--accent)/0.06)] transition-colors duration-150 focus-console cursor-pointer"
-                        >
-                          BACK
-                        </button>
-                        <button
-                          type="button"
-                          onClick={handleBegin}
-                          className="flex-1 inline-flex items-center justify-center gap-2 rounded-md bg-[rgb(var(--accent))] px-4 py-2 text-xs font-mono font-bold text-[rgb(var(--bg-primary))] transition-colors duration-150 hover:bg-[rgb(var(--accent)/0.90)] focus-console cursor-pointer"
-                        >
-                          <Play className="w-3.5 h-3.5 fill-current" />
-                          BEGIN
-                        </button>
-                      </div>
-                    </div>
-                  </div>
-                )}
-              </div>
+              <Grid grid={grid} agents={agents} highlightedCell={highlightedCell}>
+                <EventSpotlight events={displayedSpotlights} onDismiss={handleDismiss} />
+              </Grid>
 
               <div className="pt-2 grid grid-cols-2 sm:grid-cols-4 gap-2 text-xs font-mono border-t border-[rgb(var(--accent)/0.08)]">
                 <div className="flex items-center gap-2 text-[rgb(var(--accent))]">
@@ -250,10 +182,7 @@ export default function Home() {
 
                 <div className="flex items-center gap-2 text-[rgb(var(--emergency))]">
                   <div className="w-3.5 h-3.5 flex items-center justify-center">
-                    <svg
-                      viewBox="0 0 24 24"
-                      className="w-3.5 h-3.5 text-[rgb(var(--emergency))] fill-current"
-                    >
+                    <svg viewBox="0 0 24 24" className="w-3.5 h-3.5 text-[rgb(var(--emergency))] fill-current">
                       <polygon points="12,3 22,21 2,21" />
                     </svg>
                   </div>
