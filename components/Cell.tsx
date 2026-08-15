@@ -14,21 +14,21 @@ export const Cell: React.FC<CellProps> = ({ cell }) => {
   const getStatusClasses = () => {
     switch (status) {
       case "blocked":
-        // Obstacles read as "absence" / secondary surface without border
-        return "bg-[#16243A] border border-transparent";
+        // Obstacles read as "absence" / secondary surface (§2)
+        return "bg-[rgb(var(--bg-secondary))] border border-transparent";
       case "danger":
-        // Danger cells: ~70% fill, full-opacity 1px danger border
-        return "bg-[#EF4444]/70 border border-[#EF4444]";
+        // Danger cells: ~70% fill, full-opacity 1px danger border (§3)
+        return "bg-[rgb(var(--danger)/0.70)] border border-[rgb(var(--danger))]";
       case "safe":
-        // Safe zones: ~25% fill, calm subtle border
-        return "bg-[#22C55E]/25 border border-[#22C55E]/30";
+        // Safe zones: ~25% fill, calm subtle border (§3)
+        return "bg-[rgb(var(--success)/0.25)] border border-[rgb(var(--success)/0.30)]";
       case "hasVictim":
-        // Victim cells: full opacity victim yellow with slow 1.6s attention pulse
-        return "bg-[#FACC15] border border-[#FACC15] animate-victim-pulse";
+        // Victim cells: full opacity victim yellow with slow attention pulse (§3, §6)
+        return "bg-[rgb(var(--victim))] border border-[rgb(var(--victim))] animate-victim-pulse";
       case "empty":
       default:
-        // Empty cells: derived shade between page bg and panel chrome
-        return "bg-[#16243A]/50 border border-[rgba(34,211,238,0.08)]";
+        // Empty cells: derived shade between page bg and panel chrome (§2)
+        return "bg-[rgb(var(--bg-secondary)/0.50)] border border-[rgb(var(--accent)/0.08)]";
     }
   };
 
@@ -39,13 +39,13 @@ export const Cell: React.FC<CellProps> = ({ cell }) => {
       aria-label={`Grid Cell at ${x},${y}, status: ${status}`}
     >
       {status === "safe" && (
-        <div className="w-1.5 h-1.5 rounded-full bg-[#22C55E]/50" />
+        <div className="w-1.5 h-1.5 rounded-full bg-[rgb(var(--success)/0.50)]" />
       )}
       {status === "hasVictim" && (
-        <div className="w-2 h-2 rounded-[2px] bg-[#0B1220]" />
+        <div className="w-2 h-2 rounded-[2px] bg-[rgb(var(--bg-primary))]" />
       )}
       {status === "danger" && (
-        <div className="w-1 h-1 rounded-full bg-[#0B1220]/60" />
+        <div className="w-1 h-1 rounded-full bg-[rgb(var(--bg-primary)/0.60)]" />
       )}
     </div>
   );
