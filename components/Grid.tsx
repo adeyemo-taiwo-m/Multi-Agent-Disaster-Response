@@ -21,7 +21,7 @@ export const Grid: React.FC<GridProps> = ({
   const gridSize = grid.length;
 
   return (
-    <div className="relative w-full aspect-square bg-[#0B1220] border border-[rgba(34,211,238,0.15)] rounded-md p-1.5 overflow-hidden">
+    <div className="relative w-full aspect-square bg-[rgb(var(--bg-primary))] border border-[rgb(var(--accent)/0.15)] rounded-md p-1.5 overflow-hidden">
       {/* Background Cell Grid — 1px gap for continuous telemetry instrument surface (§5) */}
       <div
         className="w-full h-full grid gap-px"
@@ -45,10 +45,10 @@ export const Grid: React.FC<GridProps> = ({
           <div
             className={`absolute pointer-events-none z-20 transition-all duration-150 ring-2 rounded-[2px] ${
               highlightedCell.severity === "warning"
-                ? "ring-[#F97316]"
+                ? "ring-[rgb(var(--emergency))]"
                 : highlightedCell.severity === "success"
-                ? "ring-[#22C55E]"
-                : "ring-[#22D3EE]"
+                ? "ring-[rgb(var(--success))]"
+                : "ring-[rgb(var(--accent))]"
             }`}
             style={{
               left: `${(highlightedCell.x / gridSize) * 100}%`,
