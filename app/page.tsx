@@ -89,7 +89,6 @@ export default function Home() {
   const handleRunDemo = () => {
     setShowBriefing(false);
     updateConfig(DEMO_SCENARIO);
-    start();
   };
 
   const handleOpenBriefingOverlay = () => {
